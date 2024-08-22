@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Profit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            display: block;
+            margin: 20px auto;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .total-profit {
+            color: green;
+            text-align: right;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><ion-icon name="analytics-outline"></ion-icon> Rental Report</h2>
+        <div class="total-profit">
+            <span><ion-icon name="wallet-outline" style="size: 45px;"></ion-icon> Total Profit (LKR): </span><span id="total-profit">0</span>
+        </div>
+        <table id="profit-table">
+            <thead>
+                <tr>
+                    <th>Car Registration Number</th>
+                    <th>User NIC/Passport No</th>
+                    <th>Start Date</th>
+                    <th>Return Date</th>
+                    <th>Total (LKR)</th>
+                    <th>Remarks for Car</th>
+                    <th>Remarks for User</th>
+                </tr>
+            </thead>
+            <tbody id="profit-table-body">
+                <!-- Data will be injected here -->
+            </tbody>
+        </table>
+        <button class="btn" onclick="printReport()">Print Report</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const profitTableBody = document.getElementById('profit-table-body');
+            const totalProfitElement = document.getElementById('total-profit');
+            let totalProfit = 0;
+
+            // Retrieve returns data from local storage
+            const returnsData = JSON.parse(localStorage.getItem('returns')) || [];
+
+            // Populate the table with returns data
+            returnsData.forEach(entry => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.carRegNumber}</td>
+                    <td>${entry.userNIC}</td>
+                    <td>${entry.startDate}</td>
+                    <td>${entry.returnDate}</td>
+                    <td>${entry.totalLKR}</td>
+                    <td>${entry.remarksCar}</td>
+                    <td>${entry.remarksUser}</td>
+                `;
+                profitTableBody.appendChild(row);
+
+                // Update total profit
+                totalProfit += parseFloat(entry.totalLKR) || 0;
+            });
+
+            // Display the total profit
+            totalProfitElement.textContent = totalProfit.toFixed(2);
+
+            // Print report function
+            window.printReport = () => {
+                window.print();
+            };
+        });
+    </script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Return</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            position: relative;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin: 10px 0 5px;
+            color: #555;
+        }
+        input[type="text"], input[type="number"], input[type="date"], textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .checkbox-group {
+            margin-bottom: 10px;
+        }
+        .checkbox-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .total-cost {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn[type="reset"] {
+            background-color: #6c757d;
+        }
+        .btn[type="reset"]:hover {
+            background-color: #5a6268;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 4px;
+            width: 80%;
+            max-width: 600px;
+        }
+        .modal-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+        }
+        .modal-close {
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .modal-close:hover {
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><ion-icon name="calculator-outline"></ion-icon> Car Return</h2>
+        <form id="car-return-form">
+            <label for="carRegNumber">Car Registration Number</label>
+            <select id="carRegNumber" name="carRegNumber" required>
+                <option value="">Select Car</option>
+            </select>
+
+            <label for="userNIC">User NIC/Passport No</label>
+            <input type="text" id="userNIC" name="userNIC" required>
+n
+            <label for="startDate">Start Date</label>
+            <input type="date" id="startDate" name="startDate" required>
+
+            <label for="returnDate">Return Date</label>
+            <input type="date" id="returnDate" name="returnDate" required>
+
+            <label for="maintenanceCost">Maintenance Cost</label>
+            <input type="number" id="maintenanceCost" name="maintenanceCost" required>
+
+            <label for="discount">Discount</label>
+            <input type="number" id="discount" name="discount" required>
+
+            <label for="perDayCost">Per Day/100 km</label>
+            <input type="number" id="perDayCost" name="perDayCost" required>
+
+            <label for="extraKm">Extra Km</label>
+            <input type="number" id="extraKm" name="extraKm" required>
+
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="noDamage" value="No Damage"> No Damage</label>
+                <label><input type="checkbox" name="noAccident" value="No Accident"> No Accident</label>
+                <label><input type="checkbox" name="noDrunkDrive" value="No Drunk & Drive or Over Speed"> No Drunk & Drive or Over Speed</label>
+                <label><input type="checkbox" name="noPoliceCase" value="No Police Case or Crime Activity"> No Police Case or Crime Activity</label>
+                <label><input type="checkbox" name="oilRefill" value="Oil & Radiator Refill"> Oil & Radiator Refill</label>
+                <label><input type="checkbox" name="returnTax" value="Return Tax, Insurance & Key"> Return Tax, Insurance & Key</label>
+            </div>
+
+            <label for="remarksCar">Remarks for Car</label>
+            <textarea id="remarksCar" name="remarksCar"></textarea>
+
+            <label for="remarksUser">Remarks for User</label>
+            <textarea id="remarksUser" name="remarksUser"></textarea>
+
+            <div class="total-cost">
+                <label for="totalLKR">Total (LKR)</label>
+                <input type="number" id="totalLKR" name="totalLKR" readonly>
+            </div>
+
+            <div class="buttons">
+                <button type="button" class="btn" onclick="calculateTotal()">Calculate Total</button>
+                <button type="reset" class="btn">Reset</button>
+                <button type="submit" class="btn">Submit</button>
+                <button type="button" class="btn" onclick="printReceipt()">Print Receipt</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('car-return-form');
+            const carSelect = document.getElementById('carRegNumber');
+    
+            // Populate the dropdown with approved cars from local storage
+            const approvedCars = JSON.parse(localStorage.getItem('approvedCars')) || [];
+            approvedCars.forEach(car => {
+                const option = document.createElement('option');
+                option.value = car;
+                option.textContent = car;
+                carSelect.appendChild(option);
+            });
+    
+            // Calculate total function
+            window.calculateTotal = () => {
+                const maintenanceCost = parseFloat(form.maintenanceCost.value) || 0;
+                const discount = parseFloat(form.discount.value) || 0;
+                const extraKm = parseFloat(form.extraKm.value) || 0;
+    
+                // Total = (Extra Km * 100) - Maintenance Cost - Discount
+                const totalLKR = (extraKm * 100) - maintenanceCost - discount;
+    
+                form.totalLKR.value = totalLKR.toFixed(2); // Display the total in the Total (LKR) box
+            };
+    
+            // Handle form submission
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+    
+                const formData = {
+                    carRegNumber: form.carRegNumber.value,
+                    userNIC: form.userNIC.value,
+                    startDate: form.startDate.value,
+                    returnDate: form.returnDate.value,
+                    maintenanceCost: form.maintenanceCost.value,
+                    discount: form.discount.value,
+                    perDayCost: form.perDayCost.value,
+                    extraKm: form.extraKm.value,
+                    totalLKR: form.totalLKR.value,
+                    noDamage: form.noDamage.checked,
+                    noAccident: form.noAccident.checked,
+                    noDrunkDrive: form.noDrunkDrive.checked,
+                    noPoliceCase: form.noPoliceCase.checked,
+                    oilRefill: form.oilRefill.checked,
+                    returnTax: form.returnTax.checked,
+                    remarksCar: form.remarksCar.value,
+                    remarksUser: form.remarksUser.value
+                };
+    
+                // Save to local storage
+                const returns = JSON.parse(localStorage.getItem('returns')) || [];
+                returns.push(formData);
+                localStorage.setItem('returns', JSON.stringify(returns));
+    
+                alert('Car return data has been saved successfully!');
+                form.reset(); // Reset the form after saving
+            });
+    
+            // Print receipt function
+            window.printReceipt = () => {
+                window.print();
+            };
+        });
+    </script>
+    
+
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+</body>
+</html>

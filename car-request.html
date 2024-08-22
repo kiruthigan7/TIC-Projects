@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Car</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            position: relative;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin: 10px 0 5px;
+            color: #555;
+        }
+        select, input[type="text"], input[type="number"], input[type="date"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .car-details {
+            margin: 20px 0;
+        }
+        .car-details p {
+            margin: 5px 0;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .filter-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .filter-buttons button {
+            background-color: #28a745;
+        }
+        .filter-buttons button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><ion-icon name="car-sport-outline"></ion-icon> Select here for Book your car now!</h2>
+
+        <div class="filter-buttons">
+            <button class="btn" id="filter-model">Filter by Model</button>
+            <button class="btn" id="filter-fuel-type">Filter by Fuel Type</button>
+            <button class="btn" id="filter-seat-count">Filter by Seat Count</button>
+            <button class="btn" id="filter-price-range">Filter by Price Range</button>
+        </div>
+
+        <form id="car-selection-form">
+            <label for="carName">Select Car</label>
+            <select id="carName" name="carName" required>
+                <option value="">Select Car</option>
+            </select>
+
+            <div class="car-details" id="car-details">
+                <!-- Car details will be injected here -->
+            </div>
+
+            <div class="buttons">
+                <button type="button" class="btn" id="request-button">Request</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const carSelect = document.getElementById('carName');
+            const carDetailsDiv = document.getElementById('car-details');
+            const requestButton = document.getElementById('request-button');
+            const filterModel = document.getElementById('filter-model');
+            const filterFuelType = document.getElementById('filter-fuel-type');
+            const filterSeatCount = document.getElementById('filter-seat-count');
+            const filterPriceRange = document.getElementById('filter-price-range');
+
+            // Populate dropdown with car names from local storage
+            let cars = JSON.parse(localStorage.getItem('cars')) || [];
+            const carOptions = cars.map(car => ({
+                value: car.registrationNumber,
+                text: `${car.model} (${car.registrationNumber})`,
+                ...car
+            }));
+
+            function updateCarOptions(filteredCars) {
+                carSelect.innerHTML = '<option value="">Select Car</option>';
+                filteredCars.forEach(car => {
+                    const option = document.createElement('option');
+                    option.value = car.registrationNumber;
+                    option.textContent = `${car.model} (${car.registrationNumber})`;
+                    carSelect.appendChild(option);
+                });
+            }
+
+            function filterCars(filter) {
+                const filteredCars = cars.filter(car => {
+                    return (filter.model ? car.model === filter.model : true) &&
+                           (filter.fuelType ? car.fuelType === filter.fuelType : true) &&
+                           (filter.seatCount ? car.seatCount === filter.seatCount : true) &&
+                           (filter.minPrice && filter.maxPrice ? car.price >= filter.minPrice && car.price <= filter.maxPrice : true);
+                });
+                updateCarOptions(filteredCars);
+            }
+
+            // Display selected car details
+            carSelect.addEventListener('change', function() {
+                const selectedRegNumber = this.value;
+                const car = cars.find(car => car.registrationNumber === selectedRegNumber);
+
+                if (car) {
+                    carDetailsDiv.innerHTML = `
+                        <h3>${car.model} (${car.manufacturedYear})</h3>
+                        <p><strong>Registration Number:</strong> ${car.registrationNumber}</p>
+                        <p><strong>Price:</strong> $${car.price}</p>
+                        <p><strong>Color:</strong> ${car.color}</p>
+                        <p><strong>Seats:</strong> ${car.seatCount}</p>
+                        <p><strong>Fuel Type:</strong> ${car.fuelType}</p>
+                        <p><strong>Insurance Date:</strong> ${car.insuranceDate}</p>
+                        <p><strong>Last Oil Change (km):</strong> ${car.lastOilChange}</p>
+                        <p><strong>Description:</strong> ${car.description}</p>
+                        <p><strong>RC Book Copy:</strong> ${car.rcBookCopy}</p>
+                        <p><strong>Modified Details:</strong> ${car.modifiedDetails}</p>
+                        <p><strong>Extra Remarks:</strong> ${car.extraRemarks}</p>
+                        ${car.photos ? `<img src="${car.photos}" alt="Car Photo" style="width: 100px; height: auto;">` : ''}
+                    `;
+                } else {
+                    carDetailsDiv.innerHTML = '<p>Please select a car to see details.</p>';
+                }
+            });
+
+            // Handle request button click
+            requestButton.addEventListener('click', function() {
+                const selectedRegNumber = carSelect.value;
+                if (selectedRegNumber) {
+                    // Create request object
+                    const request = {
+                        regNumber: selectedRegNumber,
+                        timestamp: new Date().toISOString()
+                    };
+
+                    // Save request to local storage
+                    let requests = JSON.parse(localStorage.getItem('requests')) || [];
+                    requests.push(request);
+                    localStorage.setItem('requests', JSON.stringify(requests));
+
+                    alert('Thank you for requesting the car in our service. Please wait for approval.');
+                    
+                    // Optionally redirect to notification page
+                    // window.location.href = 'notification.html';
+                } else {
+                    alert('Please select a car first.');
+                }
+            });
+
+            // Filter buttons functionality
+            filterModel.addEventListener('click', () => {
+                const model = prompt("Enter model to filter:");
+                filterCars({ model });
+            });
+
+            filterFuelType.addEventListener('click', () => {
+                const fuelType = prompt("Enter fuel type to filter:");
+                filterCars({ fuelType });
+            });
+
+            filterSeatCount.addEventListener('click', () => {
+                const seatCount = prompt("Enter seat count to filter:");
+                filterCars({ seatCount });
+            });
+
+            filterPriceRange.addEventListener('click', () => {
+                const minPrice = prompt("Enter minimum price:");
+                const maxPrice = prompt("Enter maximum price:");
+                filterCars({ minPrice: parseFloat(minPrice), maxPrice: parseFloat(maxPrice) });
+            });
+
+            // Initialize with all cars
+            updateCarOptions(carOptions);
+        });
+    </script>
+
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+       <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+</body>
+</html>
